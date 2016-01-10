@@ -29,7 +29,7 @@ def setup():
     return G, o, g, o_bytes
 
 
-def mix_package(sender, receiver, triplets):
+def mix_package(sender, receiver, triplets, dest_message = '', return_message=''):
     ''' Package a message through a mix-net. '''
 
     aes = Cipher("AES-128-CTR")
@@ -98,7 +98,7 @@ def mix_package(sender, receiver, triplets):
     all_data = zip(round_trip, all_factors, pubs, addressing, all_keys) 
 
     # Build the backwards path
-    prev = ''
+    prev = return_message
     backwards_stages = [ ]
     for j in range(len(mix_names) + 1):
         (mname, mpub, msec), bs, yelem, (xfrom, xto), (k1, k2) = all_data[j]
@@ -114,7 +114,7 @@ def mix_package(sender, receiver, triplets):
         backwards_stages += [ prev ]
 
     # Build the forwards path
-    prev = ''
+    prev = dest_message
     forwards_stages = []
     for jp in range(len(mix_names) + 1):
         j = len(mix_names) - jp
@@ -155,9 +155,9 @@ def mix_package(sender, receiver, triplets):
             assert msg_b[:20] == mac2
     # End __debug__
 
-    return zip(pubs[:len(mix_names) + 1], forwards_stages + [''], [''] + backwards_stages)
+    return zip(pubs[:len(mix_names) + 1], forwards_stages + [ dest_message ], [ return_message ] + backwards_stages)
 
-def mix_operate(message, triplet, setup):
+def mix_operate(message, triplet, setup, generate_return_message=False):
     mname, mpub, msec = triplet
     elem, forward, backwards = message
     G, o, g, o_bytes = setup
@@ -204,6 +204,13 @@ def mix_operate(message, triplet, setup):
 
         new_back = mac2 + new_back_body
 
+        if generate_return_message:
+            ret_elem = old_bs * elem
+            ret_forw = new_back
+            ret_back = None
+            
+            return ((xto, xfrom), (ret_elem, ret_forw, ret_back) )            
+
     else:
 
         # Returns do not need to build returns
@@ -245,3 +252,7 @@ if __name__ == "__main__":
         _, msg2 = mix_operate(msgs[i], triplets[i], (G, o, g, o_bytes))
         assert msg2 == msgs[i+1]
 
+    # Ensure that the message can be returned as well.
+    _, ret_msg = mix_operate(msgs[5], triplets[5], (G, o, g, o_bytes), True)
+    (xf, xt), check_ret = mix_operate(ret_msg, triplets[5], (G, o, g, o_bytes))
+    print xt, check_ret
