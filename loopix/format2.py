@@ -105,7 +105,7 @@ def mix_package(sender, receiver, triplets, dest_message = '', return_message=''
         the_bs = bs.mod_inverse(o).binary()
         
         enc = aes.enc(k2.kenc, k2.iv)
-        ciphertext = enc.update("1" + xto + xfrom + the_bs + prev)
+        ciphertext = enc.update("1" + xto + xfrom + prev)
         ciphertext += enc.finalize()
 
         mac = hmac.new(k2.kmac, ciphertext, digestmod=sha1).digest()
@@ -187,18 +187,17 @@ def mix_operate(message, triplet, setup, generate_return_message=False):
         raise Exception("Wrong routing code")
 
     pt = pt[1:]
-    xfrom, xto, the_bs, new_forw = pt[:4], pt[4:8], pt[8:8+o_bytes], pt[8+o_bytes:]
-    old_bs = Bn.from_binary(the_bs)
 
     if xcode == "0":
 
+        xfrom, xto, the_bs, new_forw = pt[:4], pt[4:8], pt[8:8+o_bytes], pt[8+o_bytes:]
+        old_bs = Bn.from_binary(the_bs)
+
         # Now package the return part
         k2 = KDF(((msec * old_bs) * elem).export())
-
-        new_bs = old_bs.mod_inverse(o).binary()
             
         enc = aes.enc(k2.kenc, k2.iv)
-        new_back_body = enc.update("1" + xto + xfrom + new_bs + backwards)
+        new_back_body = enc.update("1" + xto + xfrom + backwards)
         new_back_body += enc.finalize()
         mac2 = hmac.new(k2.kmac, new_back_body, digestmod=sha1).digest()
 
@@ -212,6 +211,8 @@ def mix_operate(message, triplet, setup, generate_return_message=False):
             return ((xto, xfrom), (ret_elem, ret_forw, ret_back) )            
 
     else:
+
+        xfrom, xto, new_forw = pt[:4], pt[4:8], pt[8:]
 
         # Returns do not need to build returns
         if not (backwards == None):
@@ -257,4 +258,4 @@ if __name__ == "__main__":
     # Ensure that the message can be returned as well.
     _, ret_msg = mix_operate(msgs[5], triplets[5], (G, o, g, o_bytes), True)
     (xf, xt), check_ret = mix_operate(ret_msg, triplets[5], (G, o, g, o_bytes))
-    print xt, check_ret
+    

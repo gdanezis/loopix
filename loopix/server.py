@@ -50,7 +50,7 @@ class Echo(DatagramProtocol):
     def do_ROUT(self, data, (host, port)):
         print "do ROUTING"
         msg = decode(data[4:])
-        (xfrom, xto), next_msg = mix_operate(msg, (self.y, self.ypub, None), self.setup)
+        (xfrom, xto), next_msg = mix_operate(msg, (None, self.ypub, self.y), self.setup)
 
 
 
