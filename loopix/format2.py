@@ -247,6 +247,8 @@ if __name__ == "__main__":
     # Note: msgs[0] is the message, msgs[i] are what it 
     # will be in all future mixing stages.
 
+    print "Size:", map(len, [msgs[0][0].export(), msgs[0][1],msgs[0][2]])
+
     # Check that every stage of mixing yields the next message
     for i in range(len(triplets)):
         _, msg2 = mix_operate(msgs[i], triplets[i], (G, o, g, o_bytes))
