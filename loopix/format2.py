@@ -158,6 +158,9 @@ def mix_package(sender, receiver, triplets, dest_message = '', return_message=''
     return zip(pubs[:len(mix_names) + 1], forwards_stages + [ dest_message ], [ return_message ] + backwards_stages)
 
 def mix_operate(message, triplet, setup, generate_return_message=False):
+    ''' Operate a Mix with a received message, and its keys. '''
+
+
     mname, mpub, msec = triplet
     elem, forward, backwards = message
     G, o, g, o_bytes = setup
